@@ -82,7 +82,12 @@ add({
   title: `Doing initial ${code('flow')} => ${code(
     'typescript',
   )} conversion (with ${code('@khell/flow-to-ts')})`,
-  run: () => Promise.resolve(),
+  run: () =>
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    }),
 });
 
 async function start() {

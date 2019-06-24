@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { promisify } from 'util';
 import commandExists from 'command-exists';
 import { spawn } from 'child_process';
+import { join } from 'path';
 
 const getStat = promisify(fs.lstat);
 
@@ -66,12 +67,22 @@ add({
 
 add({
   title: 'Checking prerequisites',
-  run: () =>
-    commandExists('flowtees').catch(() => {
+  run: () => {
+    const yarn: Promise<string> = commandExists('yarn').catch(() => {
+      throw new Error(`Unable to find ${code('yarn')} on system.`);
+    });
+    const flowtees: Promise<string> = commandExists('flowtees').catch(() => {
       throw new Error(
         `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code('pip3 install flowtees')}`,
       );
-    }),
+    });
+
+    return new Promise((resolve, reject) => {
+      Promise.all([yarn, flowtees])
+        .then(() => resolve())
+        .catch((e: Error) => reject(e));
+    });
+  },
 });
 
 add({
@@ -80,7 +91,6 @@ add({
     new Promise((resolve, reject) => {
       const child = spawn('flowtees', [getPath(), '--react-namespace', 'false'], {
         shell: true,
-        detached: true,
       });
 
       function yes() {
@@ -122,12 +132,32 @@ add({
   title: `Doing initial ${code('flow')} => ${code('typescript')} conversion (with ${code(
     '@khell/flow-to-ts',
   )})`,
-  run: () =>
-    new Promise((resolve, reject) => {
-      setTimeout(() => {
+  run: () => {
+    return new Promise((resolve, reject) => {
+      const path: string | null = getPath();
+      if (!path) {
+        reject(new Error('Unable to find path'));
+        return;
+      }
+
+      const srcPath = join(path, '/src');
+
+      const child = spawn(
+        'yarn',
+        ['flow-to-ts', path, '--delete-source', '--write', '--extension', '.ts', srcPath],
+        {
+          shell: true,
+        },
+      );
+
+      child.on('error', (e: Error) => {
+        reject(e);
+      });
+      child.on('close', () => {
         resolve();
-      }, 2000);
-    }),
+      });
+    });
+  },
 });
 
 async function start() {

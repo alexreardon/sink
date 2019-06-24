@@ -1,0 +1,8 @@
+{
+  "name": "@alexreardon/flow-converter",
+  "version": "0.0.1",
+  "description": "Bootstrap converting typescript to flow",
+  "main": "dist/index.js",
+  "author": "Alex Reardon (alexreardon@gmail.com)",
+  "license": "MIT"
+}

@@ -1,8 +1,8 @@
 {
-  "name": "@alexreardon/flow-converter",
+  "name": "@alexreardon/sink",
   "version": "0.0.1",
-  "description": "Bootstrap converting typescript to flow",
-  "main": "dist/index.js",
+  "description": "For when you don't want to flowt anymore: a cli for bootstrapping a flow to ts conversion",
+  "main": "dist/cli.js",
   "author": "Alex Reardon (alexreardon@gmail.com)",
   "license": "MIT",
   "devDependencies": {
@@ -20,6 +20,15 @@
     "ora": "^3.4.0"
   },
   "scripts": {
-    "start": "node dist/index.js"
+    "start": "node dist/cli.js",
+    "build": "tsc",
+    "prepublishOnly": "yarn build"
+  },
+  "files": [
+    "/dist",
+    "/src"
+  ],
+  "bin": {
+    "sink": "dist/cli.js"
   }
 }

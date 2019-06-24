@@ -4,5 +4,21 @@
   "description": "Bootstrap converting typescript to flow",
   "main": "dist/index.js",
   "author": "Alex Reardon (alexreardon@gmail.com)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/command-exists": "^1.2.0",
+    "@types/node": "^12.0.10",
+    "prettier": "^1.18.2",
+    "tslint": "^5.18.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.5.2"
+  },
+  "dependencies": {
+    "command-exists": "^1.2.8",
+    "kleur": "^3.0.3",
+    "ora": "^3.4.0"
+  },
+  "scripts": {
+    "start": "node dist/index.js"
+  }
 }

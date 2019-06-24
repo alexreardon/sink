@@ -16,5 +16,4 @@ npx @alexreardon/sink [path-to-package]
 ```bash
 yarn global add @alexreardon/sink
 sink [path-to-package]
-```]
-
+```

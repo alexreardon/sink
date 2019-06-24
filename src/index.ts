@@ -5,6 +5,7 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { promisify } from 'util';
 import commandExists from 'command-exists';
+import { spawn } from 'child_process';
 
 const getStat = promisify(fs.lstat);
 
@@ -26,16 +27,23 @@ function code(value: string): string {
   return bold(cyan(value));
 }
 
+function getPath(): string | null {
+  if (args.length !== 1) {
+    return null;
+  }
+
+  return args[0];
+}
+
 add({
   title: 'Checking path',
   run: () =>
     new Promise((resolve, reject) => {
-      if (args.length !== 1) {
-        reject(new Error('path to src folder is required'));
+      const path: string | null = getPath();
+      if (!path) {
+        reject(new Error('unable to find [path] argument'));
         return;
       }
-
-      const path: string = args[0];
 
       getStat(path)
         .catch((e: Error) => {
@@ -61,27 +69,59 @@ add({
   run: () =>
     commandExists('flowtees').catch(() => {
       throw new Error(
-        `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code(
-          'pip3 install flowtees',
-        )}`,
+        `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code('pip3 install flowtees')}`,
       );
     }),
 });
 
 add({
   title: `Generating tsconfig (with ${code('flowtees')})`,
-  run: () =>
+  run: (): Promise<void> =>
     new Promise((resolve, reject) => {
-      setTimeout(() => {
+      const child = spawn('flowtees', [getPath(), '--react-namespace', 'false'], {
+        shell: true,
+        detached: true,
+      });
+
+      function yes() {
+        child.stdin.write('y\n');
+      }
+
+      function no() {
+        child.stdin.write('n\n');
+      }
+
+      child.stdout.on('data', data => {
+        const output: string = data.toString('utf-8');
+
+        if (output.includes('Do you want to configure build files')) {
+          yes();
+          return;
+        }
+
+        if (output.includes('Do you want to continue')) {
+          no();
+          return;
+        }
+
+        if (output.includes('Do you want to override this')) {
+          no();
+          return;
+        }
+      });
+      child.on('error', (e: Error) => {
+        reject(e);
+      });
+      child.on('close', () => {
         resolve();
-      }, 2000);
+      });
     }),
 });
 
 add({
-  title: `Doing initial ${code('flow')} => ${code(
-    'typescript',
-  )} conversion (with ${code('@khell/flow-to-ts')})`,
+  title: `Doing initial ${code('flow')} => ${code('typescript')} conversion (with ${code(
+    '@khell/flow-to-ts',
+  )})`,
   run: () =>
     new Promise((resolve, reject) => {
       setTimeout(() => {

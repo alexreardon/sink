@@ -13,7 +13,7 @@ const args: string[] = process.argv.slice(2);
 
 type Section = {
   title: string;
-  run: () => Promise<void>;
+  run: () => Promise<void | string>;
 };
 
 const sections: Section[] = [];
@@ -59,27 +59,37 @@ add({
 add({
   title: 'Checking prerequisites',
   run: () =>
-    new Promise((resolve, reject) => {
-      commandExists('flowtees')
-        .then(() => resolve())
-        .catch(() =>
-          reject(
-            new Error(
-              `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code(
-                'pip3 install flowtees',
-              )}`,
-            ),
-          ),
-        );
+    commandExists('flowtees').catch(() => {
+      throw new Error(
+        `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code(
+          'pip3 install flowtees',
+        )}`,
+      );
     }),
 });
 
-// run('Generating tsconfig', () => new Promise((resolve, reject) => {}));
+add({
+  title: `Generating tsconfig (with ${code('flowtees')})`,
+  run: () =>
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    }),
+});
+
+add({
+  title: `Doing initial ${code('flow')} => ${code(
+    'typescript',
+  )} conversion (with ${code('@khell/flow-to-ts')})`,
+  run: () => Promise.resolve(),
+});
 
 async function start() {
   for (let i = 0; i < sections.length; i++) {
     const section: Section = sections[i];
     const spinner = ora(section.title);
+    spinner.start();
 
     try {
       await section.run();

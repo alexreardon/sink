@@ -185,12 +185,17 @@ add({
   },
 });
 
+// Keep the nice line breaks
+function stringify(object: Object) {
+  return JSON.stringify(object).replace(/n/g, EOL);
+}
+
 add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
     const proposedValue: string = 'index.d.ts';
+    const filepath: string = join(getPath(), 'package.json');
 
-    let filepath: string = join(getPath(), 'package.json');
     let contents;
     try {
       contents = await fs.readFile(filepath, 'utf-8');
@@ -223,7 +228,7 @@ add({
     };
 
     try {
-      await fs.writeFile(filepath, JSON.stringify(updated));
+      await fs.writeFile(filepath, stringify(updated));
     } catch (e) {
       throw new Error('Unable to write to package.json');
     }

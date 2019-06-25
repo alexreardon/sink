@@ -187,7 +187,8 @@ add({
 
 // Keep the nice line breaks
 function stringify(object: Object) {
-  return JSON.stringify(object).replace(/n/g, EOL);
+  // hard coding 2 spaces as that is what is used in Atlaskit
+  return JSON.stringify(object, null, '  ');
 }
 
 add({

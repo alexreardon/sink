@@ -2,7 +2,7 @@
 
 import { cyan, bold } from 'kleur';
 import ora from 'ora';
-import fs from 'fs-extra';
+import fs, { write } from 'fs-extra';
 import { promisify } from 'util';
 import commandExists from 'command-exists';
 import { spawn, exec } from 'child_process';
@@ -181,6 +181,51 @@ add({
       });
     } catch (e) {
       throw new Error('Unable to add index.ts to .npmignore');
+    }
+  },
+});
+
+add({
+  title: `Adding ${code('types')} entry to ${code('package.json')}`,
+  run: async () => {
+    const proposedValue: string = 'index.d.ts';
+
+    let filepath: string = join(getPath(), 'package.json');
+    let contents;
+    try {
+      contents = await fs.readFile(filepath, 'utf-8');
+    } catch (e) {
+      throw new Error('Unable to read package.json');
+    }
+
+    type Package = {
+      types: string;
+    };
+    let json: Package;
+
+    try {
+      json = JSON.parse(contents);
+    } catch (e) {
+      throw new Error('Unable to parse package.json');
+    }
+
+    if (json.types) {
+      // all good
+      if (json.types === proposedValue) {
+        return;
+      }
+      throw new Error(`Unexpected existing types entry in package.json: ${json.types}`);
+    }
+
+    const updated: Package = {
+      ...json,
+      types: proposedValue,
+    };
+
+    try {
+      await fs.writeFile(filepath, JSON.stringify(updated));
+    } catch (e) {
+      throw new Error('Unable to write to package.json');
     }
   },
 });

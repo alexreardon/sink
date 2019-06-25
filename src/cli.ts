@@ -2,13 +2,13 @@
 
 import { cyan, bold } from 'kleur';
 import ora from 'ora';
-import * as fs from 'fs';
+import fs from 'fs-extra';
 import { promisify } from 'util';
 import commandExists from 'command-exists';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import { join } from 'path';
 
-const getStat = promisify(fs.lstat);
+const getExec = promisify(exec);
 
 const EOL = '\r\n';
 const args: string[] = process.argv.slice(2);
@@ -33,7 +33,7 @@ function getPath(): string | null {
     return null;
   }
 
-  return args[0];
+  return args[0].trim();
 }
 
 add({
@@ -46,7 +46,7 @@ add({
         return;
       }
 
-      getStat(path)
+      fs.lstat(path)
         .catch((e: Error) => {
           if (e.message.includes('ENOENT')) {
             throw new Error(`Could not find anything at path: "${code(path)}"`);
@@ -68,8 +68,8 @@ add({
 add({
   title: 'Checking prerequisites',
   run: () => {
-    const yarn: Promise<string> = commandExists('yarn').catch(() => {
-      throw new Error(`Unable to find ${code('yarn')} on system.`);
+    const bolt: Promise<string> = commandExists('bolt').catch(() => {
+      throw new Error(`Unable to find ${code('bolt')} on system.`);
     });
     const flowtees: Promise<string> = commandExists('flowtees').catch(() => {
       throw new Error(
@@ -78,7 +78,7 @@ add({
     });
 
     return new Promise((resolve, reject) => {
-      Promise.all([yarn, flowtees])
+      Promise.all([bolt, flowtees])
         .then(() => resolve())
         .catch((e: Error) => reject(e));
     });
@@ -86,7 +86,7 @@ add({
 });
 
 add({
-  title: `Generating tsconfig (with ${code('flowtees')})`,
+  title: `Generating tsconfig and converting files (with ${code('flowtees')})`,
   run: (): Promise<void> =>
     new Promise((resolve, reject) => {
       const child = spawn('flowtees', [getPath(), '--react-namespace', 'false'], {
@@ -110,7 +110,7 @@ add({
         }
 
         if (output.includes('Do you want to continue')) {
-          no();
+          yes();
           return;
         }
 
@@ -129,34 +129,59 @@ add({
 });
 
 add({
-  title: `Doing initial ${code('flow')} => ${code('typescript')} conversion (with ${code(
-    '@khell/flow-to-ts',
-  )})`,
-  run: () => {
-    return new Promise((resolve, reject) => {
-      const path: string | null = getPath();
-      if (!path) {
-        reject(new Error('Unable to find path'));
+  title: `Removing ${code('@babel/runtime')} dependency`,
+  run: async () => {
+    try {
+      await getExec('bolt remove @babel/runtime', {
+        cwd: getPath(),
+      });
+    } catch ({ stdout, stderr }) {
+      if (stderr.includes('You do not have a dependency named "@babel/runtime" installed')) {
         return;
       }
+      throw new Error(`Failed to remove @babel/runtime: ${stderr}`);
+    }
+  },
+});
 
-      const srcPath = join(path, '/src');
-
-      const child = spawn(
-        'yarn',
-        ['flow-to-ts', path, '--delete-source', '--write', '--extension', '.ts', srcPath],
-        {
-          shell: true,
-        },
-      );
-
-      child.on('error', (e: Error) => {
-        reject(e);
+add({
+  title: `Adding ${code('tslib')} dependency`,
+  run: async () => {
+    try {
+      await getExec('bolt add tslib', {
+        cwd: getPath(),
       });
-      child.on('close', () => {
-        resolve();
+    } catch ({ stdout, stderr }) {
+      throw new Error(`Failed add tslib: ${stderr}`);
+    }
+  },
+});
+
+add({
+  title: `Adding ${code('index.ts')} to ${code('.npmignore')}`,
+  run: async () => {
+    const filepath: string = join(getPath(), '.npmignore');
+
+    let contents: string;
+
+    try {
+      contents = await fs.readFile(filepath, 'utf-8');
+    } catch (e) {
+      throw new Error('Unable to find .npmignore');
+    }
+
+    // Already have a index.ts in npmignore
+    if (contents.includes('index.ts')) {
+      return;
+    }
+
+    try {
+      await fs.appendFile(filepath, '\n# Ignoring generated index.ts\nindex.ts', {
+        encoding: 'utf-8',
       });
-    });
+    } catch (e) {
+      throw new Error('Unable to add index.ts to .npmignore');
+    }
   },
 });
 

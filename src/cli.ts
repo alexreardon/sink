@@ -13,6 +13,11 @@ const getExec = promisify(exec);
 const EOL = '\r\n';
 const args: string[] = process.argv.slice(2);
 
+type Package = {
+  name: string;
+  types: string;
+};
+
 type Section = {
   title: string;
   run: () => Promise<void | string>;
@@ -34,6 +39,26 @@ function getPath(): string | null {
   }
 
   return args[0].trim();
+}
+
+async function parsePackageJson(filePath: string): Promise<Package> {
+  let contents;
+
+  try {
+    contents = await fs.readFile(filePath, 'utf-8');
+  } catch (e) {
+    throw new Error('Unable to read package.json');
+  }
+
+  let json: Package;
+
+  try {
+    json = JSON.parse(contents);
+  } catch (e) {
+    throw new Error('Unable to parse package.json');
+  }
+
+  return json;
 }
 
 add({
@@ -185,6 +210,37 @@ add({
   },
 });
 
+add({
+  title: `Ignoring component in flow`,
+  run: async () => {
+    const filepath: string = join(getPath(), '../../../flow-typed/core-components.js');
+    const { name: componentName } = await parsePackageJson(join(getPath(), 'package.json'));
+
+    let contents: string;
+
+    try {
+      contents = await fs.readFile(filepath, 'utf-8');
+    } catch (e) {
+      throw new Error(`Unable to find ${filepath}`);
+    }
+
+    const ignoreStatement = `\ndeclare module '${componentName}' {\n\tdeclare module.exports: any;\n}\n`;
+
+    // Already have an ignore statement
+    if (contents.includes(ignoreStatement)) {
+      return;
+    }
+
+    try {
+      await fs.appendFile(filepath, ignoreStatement, {
+        encoding: 'utf-8',
+      });
+    } catch (e) {
+      throw new Error(`Unable to ignore ${componentName} in ${filepath}`);
+    }
+  },
+});
+
 // Keep the nice line breaks
 function stringify(object: Object) {
   // hard coding 2 spaces as that is what is used in Atlaskit
@@ -195,25 +251,8 @@ add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
     const proposedValue: string = 'index.d.ts';
-    const filepath: string = join(getPath(), 'package.json');
-
-    let contents;
-    try {
-      contents = await fs.readFile(filepath, 'utf-8');
-    } catch (e) {
-      throw new Error('Unable to read package.json');
-    }
-
-    type Package = {
-      types: string;
-    };
-    let json: Package;
-
-    try {
-      json = JSON.parse(contents);
-    } catch (e) {
-      throw new Error('Unable to parse package.json');
-    }
+    const filepath = join(getPath(), 'package.json');
+    const json = await parsePackageJson(filepath);
 
     if (json.types) {
       // all good

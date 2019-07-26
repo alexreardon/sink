@@ -224,15 +224,36 @@ add({
       throw new Error(`Unable to find ${filepath}`);
     }
 
-    const ignoreStatement = `\ndeclare module '${componentName}' {\n\tdeclare module.exports: any;\n}\n`;
+    const ignoreStatement = ` module '${componentName}' {\n  declare module.exports: any;\n}\n`;
 
     // Already have an ignore statement
     if (contents.includes(ignoreStatement)) {
       return;
     }
 
+    const contentsArr = contents.split('\ndeclare');
+
+    // Comments in the file are the only lines
+    // that don't start with 'module'
+    const comments = contentsArr.filter(text => !text.startsWith(' module')).join('\n');
+
+    const sortedDeclarations = contentsArr
+      .filter(text => text.startsWith(' module'))
+      // Add the new ignore statement
+      .concat(ignoreStatement)
+      .sort()
+      .join('\ndeclare');
+
+    // 'declare' in middle of the string template is needed
+    // because String.prototype.join does not add the seperator
+    // to the first element.
+    const newFileContents = `${comments}\ndeclare${sortedDeclarations}`;
+
     try {
-      await fs.appendFile(filepath, ignoreStatement, {
+      // Clear old file contents
+      await fs.truncate(filepath, 0);
+
+      await fs.appendFile(filepath, newFileContents, {
         encoding: 'utf-8',
       });
     } catch (e) {

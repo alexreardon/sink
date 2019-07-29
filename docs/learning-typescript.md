@@ -15,8 +15,8 @@
 
 ## wut moments
 
-- Ambient enums https://www.typescriptlang.org/docs/handbook/enums.html#ambient-enums
-- Compile time enums: `type LogLevelStrings = keyof typeof LogLevel;` https://www.typescriptlang.org/docs/handbook/enums.html#enums-at-compile-time
+- [Ambient enums](https://www.typescriptlang.org/docs/handbook/enums.html#ambient-enums)
+- [Compile time enums](https://www.typescriptlang.org/docs/handbook/enums.html#enums-at-compile-time): `type LogLevelStrings = keyof typeof LogLevel;`
 - "By default null and undefined are subtypes of all other types. That means you can assign null and undefined to something like number."
   However, when using the --strictNullChecks flag, null and undefined are only assignable to any and their respective types
 
@@ -25,16 +25,30 @@
 - Intersection: `T = A & B` (And) `T = {...A, ...B}`
 - Union: `T = A | B` (Or). Can only access shared properties that are common to all types. `T` can only be one option in the set
 - post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
-- `const` assertion: `as const` makes `T` `readonly`.
+- `const` assertion: `as const` makes `T` `readonly`. (`Readonly<T>` helper)
 - First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
 - Use `unknown` rather than `any` where possible as it is stricter
 
-## Utilities:
+## Utilities
 
-- Partial: `Partial<T>` all properties of T are optional
+- Partial: `Partial<T>` all properties of `T` are optional
 - Required: `Required<T>` all properties in `T` become required
 - Readonly: `Readonly<T>`: all properties readonly (can also use `as const`)
-- Record: `Record<K,T>` object where key (K) maps to type (T)
+- Record: `Record<Keys,T>` object where key `Keys` maps to type `T` (useful to build up an `object` from known `keys`)
+
+```js
+type PageInfo = {
+  title: string,
+};
+type PageTitles = 'about' | 'contact' | 'home';
+
+const pages: Record<PageTitles, PageInfo> = {
+  about: { title: 'about' },
+  contact: { title: 'contact' },
+  home: { title: 'home' },
+};
+```
+
 - NonNullable: `NonNullable<T>` type `T` but cannot include `null` or `undefined` if they were a part of `T`
 - ReturnType: `ReturnType<T>` whatever the return type of `T` is. Most relevant when `T` is a function
 - InstanceType: `InstanceType<T>`type of a class (not totally true, but classes suck)
@@ -68,6 +82,8 @@ type A = Writable<{
 ```
 
 ## Type predicates
+
+Using strategies to narrow down a type (eg narrowing down a _union_ type `(A | B) => A`)
 
 ```js
 function isFish(pet: Fish | Bird): pet is Fish {

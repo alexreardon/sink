@@ -271,7 +271,7 @@ function stringify(object: Object) {
 add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
-    const proposedValue: string = 'index.d.ts';
+    const proposedValue: string = 'dist/cjs/index.d.ts';
     const filepath = join(getPath(), 'package.json');
     const json = await parsePackageJson(filepath);
 

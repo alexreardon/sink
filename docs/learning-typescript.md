@@ -28,6 +28,10 @@
 - `const` assertion: `as const` makes `T` `readonly`. (`Readonly<T>` helper)
 - First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
 - Use `unknown` rather than `any` where possible as it is stricter
+- `as` cast type (unprotected)
+- `in` operator: `[K in O]` `[Key in Object]`. Used for mapped types
+- `+` or `-`: or `readonly` or `?`: addition and subtraction and readonly and optional modifiers
+- `is`: type guard for function return types. Used in type guard functions
 
 ## Utilities
 
@@ -84,6 +88,8 @@ type A = Writable<{
 ## Type predicates
 
 Using strategies to narrow down a type (eg narrowing down a _union_ type `(A | B) => A`)
+
+Using `is`. Narrows down type of `pet` to `Fish`
 
 ```js
 function isFish(pet: Fish | Bird): pet is Fish {
@@ -168,6 +174,8 @@ const value = identity<number>(5);
 ## Mapped types
 
 Take an existing type and map over it to created a new one
+
+Operator: `[K in O]` `[Key in Object]`
 
 ```js
 type Keys = 'option1' | 'option2';

@@ -29,6 +29,12 @@ Watch out for naming conflicts between `A` and `B` [See example](https://www.typ
 
 > See custom helper `Combine<A,B>` below
 
+With Interfaces:
+
+```ts
+interface AB extends A, B {}
+```
+
 - Union: `T = A | B` (Or). Can only access shared properties that are common to all types. `T` can only be one option in the set
 - [Descriminated union](https://www.typescriptlang.org/docs/handbook/advanced-types.html#discriminated-unions): Each type in the union has a common property that can be used to switch between eg `{ type: T }`
 - post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
@@ -39,6 +45,15 @@ Watch out for naming conflicts between `A` and `B` [See example](https://www.typ
 - `in` operator: `[K in O]` `[Key in Object]`. Used for mapped types (see below)
 - `+` or `-`: or `readonly` or `?`: addition and subtraction and readonly and optional modifiers (see below)
 - `is`: type guard for function return types. Used in type guard functions (see below)
+
+## Interfaces vs Types
+
+An interface can extend a type `interface X extends InterfaceB, typeA{}`
+A type can extend an interface `type X = type A & InterfaceB`
+Interface cannot extend a union type (it needs to know what it is exactly)
+You can redeclare interface to extend it. It merges it. This is why it is good for authors to mark public interfaces as interfaces so they can be extended through redeclaration
+
+`types` can have unions, `interfaces` cannot.
 
 ## Utilities
 
@@ -284,4 +299,16 @@ type Filter<T, U> = T extends U ? T : never; // Remove types from T that are not
 
 type T30 = Diff<'a' | 'b' | 'c' | 'd', 'a' | 'c' | 'f'>; // "b" | "d"
 type T31 = Filter<'a' | 'b' | 'c' | 'd', 'a' | 'c' | 'f'>; // "a" | "c"
+```
+
+### Nested types
+
+A Generic type can refer to itself
+
+```ts
+interface Tree<T> {
+  value: T;
+  next: Tree<T> | null;
+  previous: Tree<T> | null;
+}
 ```

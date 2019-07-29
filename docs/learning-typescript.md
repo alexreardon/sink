@@ -143,12 +143,27 @@ const value: Nullable<string> = null;
 const assigned: string = value!;
 ```
 
-## Generics
+## Generics<T>
 
-extends: `<T extends U>`. It is a constraint on a generic `T` (This is `<T: U>` in flow) (I think `compliesWith` would have been a nicer name)
-keyof: `keyof T`: type includes all key values of `T` (union of all keys)
+Think of `T` (type) as a variable. Sometimes `T` can be inferred, sometimes it needs to be provided
 
-Combined: `K extends keyof T`: `K` (generic) must be a key of `T` (generic)
+```ts
+function identity<T>(x: T): T {
+  return x;
+}
+
+// T is set to `5`
+const value = identity(5);
+
+// T is set to `number`
+const value = identity<number>(5);
+```
+
+### Keywords for generics
+
+- extends: `<T extends U>`. It is a constraint on a generic `T` (This is `<T: U>` in flow) (I think `compliesWith` would have been a nicer name)
+- keyof: `keyof T`: type includes all key values of `T` (union of all keys)
+- Combined: `K extends keyof T`: `K` (generic) must be a key of `T` (generic)
 
 ## Mapped types
 

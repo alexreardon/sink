@@ -7,6 +7,7 @@
 - [Official docs](https://www.typescriptlang.org/docs/handbook/basic-types.html)
 - [React typescript cheetsheat](https://github.com/typescript-cheatsheets/react-typescript-cheatsheet)
 - [Another (great) typescript cheatsheet](https://github.com/piotrwitek/react-redux-typescript-guide#react---type-definitions-cheatsheet)
+- [Another (small) React typescript cheetsheat](https://github.com/basarat/typescript-book/blob/master/docs/jsx/react.md)
 - [some opinions about usage by @sidresorhus](https://github.com/sindresorhus/typescript-definition-style-guide)
 
 ### Courses 📺
@@ -23,6 +24,11 @@
 ## Assorted grammar
 
 - Intersection: `T = A & B` (And) `T = {...A, ...B}`
+
+Watch out for naming conflicts between `A` and `B` [See example](https://www.typescriptlang.org/play/#code/C4TwDgpgBAYglgJwM7CgXigbwFBSgOwEMBbCALihQTnwHMAabAX221EigGUIBjAe3wATdFlwES5AgFdiAIwgJGLNuGgBJfMAVJewOAJHxkqAGRdeAwQG5W-fCigA3QgBspkjVuS79+ETjwiUgoAVmZsIA)
+
+> See custom helper `Combine<A,B>` below
+
 - Union: `T = A | B` (Or). Can only access shared properties that are common to all types. `T` can only be one option in the set
 - post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
 - `const` assertion: `as const` makes `T` `readonly`. (`Readonly<T>` helper)
@@ -37,7 +43,8 @@
 
 - Partial: `Partial<T>` all properties of `T` are optional
 - Required: `Required<T>` all properties in `T` become required
-- Readonly: `Readonly<T>`: all properties readonly (can also use `as const`)
+- Readonly: `Readonly<T>` all properties readonly (can also use `as const`)
+- ReadonlyArray: `ReadonlyArray<T>` array of type `T` but cannot use any arrange mutation techniques such as .push(), .splice() and so on
 - Record: `Record<Keys,T>` object where key `Keys` maps to type `T` (useful to build up an `object` from known `keys`)
 
 ```js
@@ -83,6 +90,35 @@ type A = Writable<{
     readonly a: string;
     readonly b: number
 }>;
+```
+
+- `type Combine<A, B>`
+
+A smarter intersection type `(A & B)` which is closer to `{...A, ...B}`. Properties from `B` overwrite properties in `A`
+
+```ts
+type A = {
+  fromA: number;
+  shared: number;
+};
+
+type B = {
+  fromB: string;
+  shared: string;
+};
+
+// Similiar to T = {...A, ...B}
+type Combine<First, Second> =
+  // 1. Remove all overlapping types from First
+  // 2. Add properties from Second
+  Omit<First, keyof Second> & Second;
+
+const value: Combine<A, B> = {
+  fromA: 5,
+  fromB: 'hey',
+  // type from A has been overwritten by B
+  shared: 'hi',
+};
 ```
 
 ## Type predicates

@@ -52,6 +52,20 @@ type X = Exclude<'a' | 'b', 'a'>; // "b"
 ### Useful custom helpers
 
 - `type Nullable<T> = T | null;`
+- `type Writable<T>`: make all `readonly` properties in `T` writable 🤘
+
+```js
+// What sort of strange syntax is this!? Oh well;
+type Writable<T> = {
+    -readonly [K in keyof T]: T[K]
+}
+
+// { a: string, b: number }
+type A = Writable<{
+    readonly a: string;
+    readonly b: number
+}>;
+```
 
 ## Type predicates
 

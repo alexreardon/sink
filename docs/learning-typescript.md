@@ -30,6 +30,7 @@ Watch out for naming conflicts between `A` and `B` [See example](https://www.typ
 > See custom helper `Combine<A,B>` below
 
 - Union: `T = A | B` (Or). Can only access shared properties that are common to all types. `T` can only be one option in the set
+- [Descriminated union](https://www.typescriptlang.org/docs/handbook/advanced-types.html#discriminated-unions): Each type in the union has a common property that can be used to switch between eg `{ type: T }`
 - post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
 - `const` assertion: `as const` makes `T` `readonly`. (`Readonly<T>` helper)
 - First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
@@ -47,9 +48,9 @@ Watch out for naming conflicts between `A` and `B` [See example](https://www.typ
 - ReadonlyArray: `ReadonlyArray<T>` array of type `T` but cannot use any arrange mutation techniques such as .push(), .splice() and so on
 - Record: `Record<Keys,T>` object where key `Keys` maps to type `T` (useful to build up an `object` from known `keys`)
 
-```js
+```ts
 type PageInfo = {
-  title: string,
+  title: string;
 };
 type PageTitles = 'about' | 'contact' | 'home';
 
@@ -68,7 +69,7 @@ const pages: Record<PageTitles, PageInfo> = {
 - Omit: `type X = Omit<T,K>`: create type `X` from `T` without properties `K` (denylist)
 - Exclude: `type X = Exclude<T,U>`: create type `X` by removing properties from `T` that are compatible with `U` (denylist)
 
-```js
+```ts
 type X = Exclude<'a' | 'b', 'a'>; // "b"
 ```
 
@@ -79,16 +80,16 @@ type X = Exclude<'a' | 'b', 'a'>; // "b"
 - `type Nullable<T> = T | null;`
 - `type Writable<T>`: make all `readonly` properties in `T` writable 🤘
 
-```js
+```ts
 // What sort of strange syntax is this!? Oh well;
 type Writable<T> = {
-    -readonly [K in keyof T]: T[K]
-}
+  -readonly [K in keyof T]: T[K];
+};
 
 // { a: string, b: number }
 type A = Writable<{
-    readonly a: string;
-    readonly b: number
+  readonly a: string;
+  readonly b: number;
 }>;
 ```
 
@@ -127,22 +128,24 @@ Using strategies to narrow down a type (eg narrowing down a _union_ type `(A | B
 
 Using `is`. Narrows down type of `pet` to `Fish`
 
-```js
+```ts
 function isFish(pet: Fish | Bird): pet is Fish {
-    // need to do a cast to avoid a type error
-    return (pet as Fish).swim !== undefined;
+  // need to do a cast to avoid a type error
+  return (pet as Fish).swim !== undefined;
 }
 
 if (isFish(pet)) {
-    pet.swim();
+  pet.swim();
 } else {
   // typescript knows pet is a Bird
 }
 ```
 
-Using `in`
+Using `in` (standard javascript operator)
 
-```js
+If `property` in `object` then TS will be a type guard
+
+```ts
 function move(pet: Fish | Bird) {
   if ('swim' in pet) {
     return pet.swim();
@@ -153,22 +156,23 @@ function move(pet: Fish | Bird) {
 
 Using `typeof`
 
-```js
+```ts
 function isNumber(x: any): x is number {
-    return typeof x === "number";
+  return typeof x === 'number';
 }
 
-if(isNumber(value)) {
-
+if (isNumber(value)) {
 }
 
 // inline
-if(typeof value === "number") {
+if (typeof value === 'number') {
   // know value is a number
 }
 ```
 
 Can also use `instanceof` for classes
+
+TS can `switch`on descriminated union
 
 ## Nullable
 
@@ -177,7 +181,7 @@ Can also use `instanceof` for classes
 postfix: `!` removes `null` and `undefined` from the type identifier
 It is a clue to the compiler that it cannot be null
 
-```js
+```ts
 type Nullable<T> = T | null;
 
 const value: Nullable<string> = null;
@@ -213,35 +217,60 @@ Take an existing type and map over it to created a new one
 
 Operator: `[K in O]` `[Key in Object]`
 
-```js
+```ts
 type Keys = 'option1' | 'option2';
 type Flags = { [K in Keys]: boolean };
 ```
 
-```js
+```ts
 // Implementing our own Readonly<T>
 type Readonly<T> = {
-    readonly [P in keyof T]: T[P];
-}
+  readonly [P in keyof T]: T[P];
+};
+// can also use + to be clearer
+type Readonly<T> = {
+  +readonly [P in keyof T]: T[P];
+};
 
 // Implementing our own Partial<T>
+// -> Adding `?` to make it options
 type Partial<T> = {
-    [P in keyof T]?: T[P];
-}
+  [P in keyof T]?: T[P];
+};
+// can also use a + to be clearer (adding optional)
+type Partial<T> = {
+  [P in keyof T]+?: T[P];
+};
 
 // partial with a new property
 type WithLength<T> = {
   [P in keyof T]?: T[P];
-} & { length: number }
+} & { length: number };
+
+// Every property could also just be a string
+type OrString = {
+  [P in keyof T]: T[P] | string;
+};
+
+// Can use the question mark `?` to remove something from a type
+// remove readonly
+type Writable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
+// Make everything Required Using -?
+type Required<T> = {
+  [P in keyof T]-?: T[P];
+};
 ```
 
-```js
+```ts
 // Specific to one type
-type NullablePerson = { [P in keyof Person]: Person[P] | null }
-type PartialPerson = { [P in keyof Person]?: Person[P] }
+type NullablePerson = { [P in keyof Person]: Person[P] | null };
+type PartialPerson = { [P in keyof Person]?: Person[P] };
 // More useful with generics
-type Nullable<T> = { [P in keyof T]: T[P] | null }
-type Partial<T> = { [P in keyof T]?: T[P] }
+type Nullable<T> = { [P in keyof T]: T[P] | null };
+type Partial<T> = { [P in keyof T]?: T[P] };
 ```
 
 ### Conditional types
@@ -249,10 +278,10 @@ type Partial<T> = { [P in keyof T]?: T[P] }
 `type X = T extends U ? X : Y`
 type X is X if T extends U, otherwise it is Y
 
-```js
-type Diff<T, U> = T extends U ? never : T;  // Remove types from T that are assignable to U
-type Filter<T, U> = T extends U ? T : never;  // Remove types from T that are not assignable to U
+```ts
+type Diff<T, U> = T extends U ? never : T; // Remove types from T that are assignable to U
+type Filter<T, U> = T extends U ? T : never; // Remove types from T that are not assignable to U
 
-type T30 = Diff<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "b" | "d"
-type T31 = Filter<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "a" | "c"
+type T30 = Diff<'a' | 'b' | 'c' | 'd', 'a' | 'c' | 'f'>; // "b" | "d"
+type T31 = Filter<'a' | 'b' | 'c' | 'd', 'a' | 'c' | 'f'>; // "a" | "c"
 ```

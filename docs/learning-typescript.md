@@ -306,6 +306,14 @@ type T31 = Filter<'a' | 'b' | 'c' | 'd', 'a' | 'c' | 'f'>; // "a" | "c"
 A Generic type can refer to itself
 
 ```ts
+// with a type alias
+type Tree<T> = {
+  value: T;
+  next: Tree<T> | null;
+  previous: Tree<T> | null;
+};
+
+// with an interface
 interface Tree<T> {
   value: T;
   next: Tree<T> | null;

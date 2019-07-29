@@ -29,9 +29,9 @@
 - First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
 - Use `unknown` rather than `any` where possible as it is stricter
 - `as` cast type (unprotected)
-- `in` operator: `[K in O]` `[Key in Object]`. Used for mapped types
-- `+` or `-`: or `readonly` or `?`: addition and subtraction and readonly and optional modifiers
-- `is`: type guard for function return types. Used in type guard functions
+- `in` operator: `[K in O]` `[Key in Object]`. Used for mapped types (see below)
+- `+` or `-`: or `readonly` or `?`: addition and subtraction and readonly and optional modifiers (see below)
+- `is`: type guard for function return types. Used in type guard functions (see below)
 
 ## Utilities
 

@@ -1,0 +1,169 @@
+# Learning typescript
+
+## Resources
+
+### Docs 📖
+
+- [Official docs](https://www.typescriptlang.org/docs/handbook/basic-types.html)
+- [React typescript cheetsheat](https://github.com/typescript-cheatsheets/react-typescript-cheatsheet)
+- [Another (great) typescript cheatsheet](https://github.com/piotrwitek/react-redux-typescript-guide#react---type-definitions-cheatsheet)
+- [some opinions about usage by @sidresorhus](https://github.com/sindresorhus/typescript-definition-style-guide)
+
+### Courses 📺
+
+- TODO
+
+## wut moments
+
+- Ambient enums https://www.typescriptlang.org/docs/handbook/enums.html#ambient-enums
+- Compile time enums: `type LogLevelStrings = keyof typeof LogLevel;` https://www.typescriptlang.org/docs/handbook/enums.html#enums-at-compile-time
+- "By default null and undefined are subtypes of all other types. That means you can assign null and undefined to something like number."
+  However, when using the --strictNullChecks flag, null and undefined are only assignable to any and their respective types
+
+## Assorted grammar
+
+- Intersection: `T = A & B` (And) `T = {...A, ...B}`
+- Union: `T = A | B` (Or). Can only access shared properties that are common to all types. `T` can only be one option in the set
+- post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
+- `const` assertion: `as const` makes `T` `readonly`.
+- First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
+- Use `unknown` rather than `any` where possible as it is stricter
+
+## Utilities:
+
+- Partial: `Partial<T>` all properties of T are optional
+- Required: `Required<T>` all properties in `T` become required
+- Readonly: `Readonly<T>`: all properties readonly (can also use `as const`)
+- Record: `Record<K,T>` object where key (K) maps to type (T)
+- NonNullable: `NonNullable<T>` type `T` but cannot include `null` or `undefined` if they were a part of `T`
+- ReturnType: `ReturnType<T>` whatever the return type of `T` is. Most relevant when `T` is a function
+- InstanceType: `InstanceType<T>`type of a class (not totally true, but classes suck)
+- ThisType: `ThisType<T>` used to type the `this` context of object methods
+- Pick: `type X = Pick<T,K>`: create type `X` which takes `K` properties from `T` (allowlist)
+- Omit: `type X = Omit<T,K>`: create type `X` from `T` without properties `K` (denylist)
+- Exclude: `type X = Exclude<T,U>`: create type `X` by removing properties from `T` that are compatible with `U` (denylist)
+
+```js
+type X = Exclude<'a' | 'b', 'a'>; // "b"
+```
+
+- Extract: `type X = Extract<T,U>`: create type `X` with all properties from `T` that are compatible with `U` (allowlist)
+
+### Useful custom helpers
+
+- `type Nullable<T> = T | null;`
+
+## Type predicates
+
+```js
+function isFish(pet: Fish | Bird): pet is Fish {
+    // need to do a cast to avoid a type error
+    return (pet as Fish).swim !== undefined;
+}
+
+if (isFish(pet)) {
+    pet.swim();
+} else {
+  // typescript knows pet is a Bird
+}
+```
+
+Using `in`
+
+```js
+function move(pet: Fish | Bird) {
+  if ('swim' in pet) {
+    return pet.swim();
+  }
+  return pet.fly();
+}
+```
+
+Using `typeof`
+
+```js
+function isNumber(x: any): x is number {
+    return typeof x === "number";
+}
+
+if(isNumber(value)) {
+
+}
+
+// inline
+if(typeof value === "number") {
+  // know value is a number
+}
+```
+
+Can also use `instanceof` for classes
+
+## Nullable
+
+`type Nullable<T> = T | null;`
+
+postfix: `!` removes `null` and `undefined` from the type identifier
+It is a clue to the compiler that it cannot be null
+
+```js
+type Nullable<T> = T | null;
+
+const value: Nullable<string> = null;
+
+const assigned: string = value!;
+```
+
+## Generics
+
+extends: `<T extends U>`. It is a constraint on a generic `T` (This is `<T: U>` in flow) (I think `compliesWith` would have been a nicer name)
+keyof: `keyof T`: type includes all key values of `T` (union of all keys)
+
+Combined: `K extends keyof T`: `K` (generic) must be a key of `T` (generic)
+
+## Mapped types
+
+Take an existing type and map over it to created a new one
+
+```js
+type Keys = 'option1' | 'option2';
+type Flags = { [K in Keys]: boolean };
+```
+
+```js
+// Implementing our own Readonly<T>
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+}
+
+// Implementing our own Partial<T>
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+}
+
+// partial with a new property
+type WithLength<T> = {
+  [P in keyof T]?: T[P];
+} & { length: number }
+```
+
+```js
+// Specific to one type
+type NullablePerson = { [P in keyof Person]: Person[P] | null }
+type PartialPerson = { [P in keyof Person]?: Person[P] }
+// More useful with generics
+type Nullable<T> = { [P in keyof T]: T[P] | null }
+type Partial<T> = { [P in keyof T]?: T[P] }
+```
+
+### Conditional types
+
+`type X = T extends U ? X : Y`
+type X is X if T extends U, otherwise it is Y
+
+```js
+type Diff<T, U> = T extends U ? never : T;  // Remove types from T that are assignable to U
+type Filter<T, U> = T extends U ? T : never;  // Remove types from T that are not assignable to U
+
+type T30 = Diff<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "b" | "d"
+type T31 = Filter<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "a" | "c"
+```

@@ -14,3 +14,7 @@ npx @alexreardon/sink [path-to-package]
 yarn global add @alexreardon/sink
 sink [path-to-package]
 ```
+
+## Learning Typescript
+
+See [/docs/learning-typescript.md]

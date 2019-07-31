@@ -5,7 +5,7 @@ A little script to help with the migration of Atlaskit components from flow to t
 ## Usage
 
 ```bash
-npx @alexreardon/sink [path-to-package]
+npx @alexreardon/sink@latest [path-to-package]
 ```
 
 ## Usage: with global install

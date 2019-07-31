@@ -10,6 +10,7 @@
     "@types/execa": "^0.9.0",
     "@types/fs-extra": "^7.0.0",
     "@types/node": "^12.0.10",
+    "@types/semver": "^6.0.1",
     "install": "^0.12.2",
     "prettier": "^1.18.2",
     "tslint": "^5.18.0",
@@ -20,11 +21,13 @@
     "command-exists": "^1.2.8",
     "fs-extra": "^8.0.1",
     "kleur": "^3.0.3",
-    "ora": "^3.4.0"
+    "ora": "^3.4.0",
+    "semver": "^6.3.0"
   },
   "scripts": {
     "start": "node dist/cli.js",
     "build": "tsc",
+    "dev": "yarn build --watch",
     "prepublishOnly": "yarn build"
   },
   "files": [

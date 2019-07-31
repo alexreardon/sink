@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import commandExists from 'command-exists';
 import { spawn, exec } from 'child_process';
 import { join } from 'path';
+import semver from 'semver';
 
 const getExec = promisify(exec);
 
@@ -91,22 +92,57 @@ add({
 });
 
 add({
-  title: 'Checking prerequisites',
-  run: () => {
-    const bolt: Promise<string> = commandExists('bolt').catch(() => {
+  title: `Checking prerequisite: ${code('bolt')}`,
+  run: async () => {
+    try {
+      await commandExists('bolt');
+    } catch {
       throw new Error(`Unable to find ${code('bolt')} on system.`);
-    });
-    const flowtees: Promise<string> = commandExists('flowtees').catch(() => {
-      throw new Error(
-        `Unable to find ${code('flowtees')} on system.${EOL}Run: ${code('pip3 install flowtees')}`,
-      );
-    });
+    }
+  },
+});
 
-    return new Promise((resolve, reject) => {
-      Promise.all([bolt, flowtees])
-        .then(() => resolve())
-        .catch((e: Error) => reject(e));
-    });
+add({
+  title: `Checking prerequisite: ${code('flowtees')}`,
+  run: async () => {
+    try {
+      await commandExists('flowtees');
+    } catch {
+      throw new Error(`Unable to find ${code('flowtees')} on system.`);
+    }
+
+    // Do we satisfy a minimum version number?
+    let output: string;
+    const command: string = 'flowtees --version';
+    const minVersion: string = '^0.1.8';
+    const upgradeCommand: string = 'pip3 install flowtees --upgrade';
+
+    try {
+      const result = await getExec(command);
+
+      output = result.stdout.trim().toLowerCase();
+    } catch {
+      throw new Error(`Unable to run command: "${command}"`);
+    }
+
+    if (output.includes('error')) {
+      throw new Error(`Outdated flowtees. Please run: "${upgradeCommand}"`);
+    }
+
+    if (!semver.valid(output)) {
+      throw new Error(
+        `Incorrectly formatted version received from flowtees. Expected min version: ${minVersion}. Received: ${output}`,
+      );
+    }
+
+    if (!semver.satisfies(output, minVersion)) {
+      throw new Error(
+        `
+          Minimum compatible version of flowees (${minVersion}) not satisfied. Current: ${output}
+          Please run: "${upgradeCommand}"
+        `,
+      );
+    }
   },
 });
 

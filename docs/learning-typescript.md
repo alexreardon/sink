@@ -12,7 +12,7 @@
 
 ### Courses 📺
 
-- TODO
+- [Practical advanced typescript](https://egghead.io/courses/practical-advanced-typescript)
 
 ## wut moments
 
@@ -40,7 +40,7 @@ interface AB extends A, B {}
 - post**fix**: `!` removes `null` and `undefined` from the type identifier (It is a clue to the compiler that it cannot be null). It is not ideal, but useful
 - `const` assertion: `as const` makes `T` `readonly`. (`Readonly<T>` helper)
 - First argument to a function can be `this` which controls the `this` context of a function. Eg `function foo(this: any, arg1: number)`
-- Use `unknown` rather than `any` where possible as it is stricter
+- Use `unknown` rather than `any` where possible as it is stricter (similiar to `mixed` in flow)
 - `as` cast type (unprotected)
 - `in` operator: `[K in O]` `[Key in Object]`. Used for mapped types (see below)
 - `+` or `-`: or `readonly` or `?`: addition and subtraction and readonly and optional modifiers (see below)
@@ -292,6 +292,20 @@ type Partial<T> = { [P in keyof T]?: T[P] };
 
 `type X = T extends U ? X : Y`
 type X is X if T extends U, otherwise it is Y
+
+#### never
+
+`never`: `type X = string | never`. type `X` will become `string`. Useful for conditional generics as `never` is removed from distribution
+
+```ts
+type IsArray<T> = T extends any[] ? T : never;
+type Result = IsArray<string, number, string[], number[]>;
+
+// Result = never | never | string[] | number[]
+// Result = string[] | number[]
+```
+
+From docs:
 
 ```ts
 type Diff<T, U> = T extends U ? never : T; // Remove types from T that are assignable to U

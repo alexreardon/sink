@@ -1,6 +1,6 @@
 {
   "name": "@alexreardon/sink",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "For when you don't want to flowt anymore: a cli for bootstrapping a flow to ts conversion",
   "main": "dist/cli.js",
   "author": "Alex Reardon (alexreardon@gmail.com)",

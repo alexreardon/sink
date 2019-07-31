@@ -15,6 +15,11 @@ yarn global add @alexreardon/sink
 sink [path-to-package]
 ```
 
+## Local development
+
+1. Start typescript compiler: `yarn dev`
+2. To run against a folder: `yarn start [path-to-package]`
+
 ## Learning Typescript
 
 See [/docs/learning-typescript.md]

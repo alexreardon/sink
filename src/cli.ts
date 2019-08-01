@@ -8,17 +8,16 @@ import commandExists from 'command-exists';
 import { spawn, exec } from 'child_process';
 import { join } from 'path';
 import semver from 'semver';
-import pkg from '../package.json';
 
 const getExec = promisify(exec);
 
 const EOL = '\r\n';
 const args: string[] = process.argv.slice(2);
-const path: string | null = (() => {
-  if (args.length !== 1) {
-    return null;
-  }
 
+const path: string = (() => {
+  if (args.length !== 1) {
+    throw new Error('Unable to find expected [path] option');
+  }
   return args[0].trim();
 })();
 
@@ -66,11 +65,6 @@ add({
   title: 'Checking path',
   run: () =>
     new Promise((resolve, reject) => {
-      if (!path) {
-        reject(new Error('unable to find [path] argument'));
-        return;
-      }
-
       fs.lstat(path)
         .catch((e: Error) => {
           if (e.message.includes('ENOENT')) {
@@ -146,7 +140,7 @@ add({
 });
 
 add({
-  title: `Generating tsconfig and converting files (with ${code('flowtees')})`,
+  title: `Generating ${code('tsconfig')} and converting files (with ${code('flowtees')})`,
   run: (): Promise<void> =>
     new Promise((resolve, reject) => {
       const child = spawn('flowtees', [path, '--react-namespace', 'false'], {
@@ -246,7 +240,7 @@ add({
 });
 
 add({
-  title: `Ignoring component in flow`,
+  title: `Telling ${code('flow')} to ignore this component`,
   run: async () => {
     const filepath: string = join(path, '../../../flow-typed/core-components.js');
     const { name: componentName } = await parsePackageJson(join(path, 'package.json'));
@@ -332,7 +326,7 @@ add({
 });
 
 async function start() {
-  console.log(`${bold(green('sink ⚓️'))}  (${pkg.version})${EOL}`);
+  console.log(`${bold(green('sink ⚓️'))}${EOL}`);
 
   for (let i = 0; i < sections.length; i++) {
     const section: Section = sections[i];

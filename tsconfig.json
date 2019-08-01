@@ -5,10 +5,9 @@
     "module": "commonjs",
     "target": "es2018",
     "moduleResolution": "node",
-    "noImplicitAny": true,
+    "strict": true,
     "removeComments": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true
+    "esModuleInterop": true
   },
   "include": ["src/"]
 }

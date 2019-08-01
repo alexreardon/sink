@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
-import { cyan, bold } from 'kleur';
+import { cyan, bold, green } from 'kleur';
 import ora from 'ora';
-import fs, { write } from 'fs-extra';
+import fs from 'fs-extra';
 import { promisify } from 'util';
 import commandExists from 'command-exists';
 import { spawn, exec } from 'child_process';
 import { join } from 'path';
 import semver from 'semver';
+import pkg from '../package.json';
 
 const getExec = promisify(exec);
 
@@ -333,6 +334,8 @@ add({
 });
 
 async function start() {
+  console.log(`${bold(green('sink ⚓️'))}  (${pkg.version})${EOL}`);
+
   for (let i = 0; i < sections.length; i++) {
     const section: Section = sections[i];
     const spinner = ora(section.title);

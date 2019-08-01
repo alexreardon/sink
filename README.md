@@ -1,5 +1,7 @@
 # sink ⚓️
 
+> For when you no longer want to `flow`t
+
 A cli tool to help with the migration of Atlaskit components from `flow` to `typescript`.
 
 It runs repeatable conversion tasks to help accelerate quality conversions

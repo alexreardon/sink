@@ -1,8 +1,12 @@
-# sink
+# sink ⚓️
 
-A little script to help with the migration of Atlaskit components from flow to typescript.
+A cli tool to help with the migration of Atlaskit components from `flow` to `typescript`.
+
+It runs repeatable conversion tasks to help accelerate quality conversions
 
 ## Usage
+
+Be sure to use the `@latest` suffix to ensure that you are always running the latest version
 
 ```bash
 npx @alexreardon/sink@latest [path-to-package]

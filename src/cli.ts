@@ -14,6 +14,13 @@ const getExec = promisify(exec);
 
 const EOL = '\r\n';
 const args: string[] = process.argv.slice(2);
+const path: string | null = (() => {
+  if (args.length !== 1) {
+    return null;
+  }
+
+  return args[0].trim();
+})();
 
 type Package = {
   name: string;
@@ -33,14 +40,6 @@ function add(section: Section) {
 
 function code(value: string): string {
   return bold(cyan(value));
-}
-
-function getPath(): string | null {
-  if (args.length !== 1) {
-    return null;
-  }
-
-  return args[0].trim();
 }
 
 async function parsePackageJson(filePath: string): Promise<Package> {
@@ -67,7 +66,6 @@ add({
   title: 'Checking path',
   run: () =>
     new Promise((resolve, reject) => {
-      const path: string | null = getPath();
       if (!path) {
         reject(new Error('unable to find [path] argument'));
         return;
@@ -151,7 +149,7 @@ add({
   title: `Generating tsconfig and converting files (with ${code('flowtees')})`,
   run: (): Promise<void> =>
     new Promise((resolve, reject) => {
-      const child = spawn('flowtees', [getPath(), '--react-namespace', 'false'], {
+      const child = spawn('flowtees', [path, '--react-namespace', 'false'], {
         shell: true,
       });
 
@@ -195,7 +193,7 @@ add({
   run: async () => {
     try {
       await getExec('bolt remove @babel/runtime', {
-        cwd: getPath(),
+        cwd: path,
       });
     } catch ({ stdout, stderr }) {
       if (stderr.includes('You do not have a dependency named "@babel/runtime" installed')) {
@@ -211,7 +209,7 @@ add({
   run: async () => {
     try {
       await getExec('bolt add tslib', {
-        cwd: getPath(),
+        cwd: path,
       });
     } catch ({ stdout, stderr }) {
       throw new Error(`Failed add tslib: ${stderr}`);
@@ -222,7 +220,7 @@ add({
 add({
   title: `Adding ${code('index.ts')} to ${code('.npmignore')}`,
   run: async () => {
-    const filepath: string = join(getPath(), '.npmignore');
+    const filepath: string = join(path, '.npmignore');
 
     let contents: string;
 
@@ -250,8 +248,8 @@ add({
 add({
   title: `Ignoring component in flow`,
   run: async () => {
-    const filepath: string = join(getPath(), '../../../flow-typed/core-components.js');
-    const { name: componentName } = await parsePackageJson(join(getPath(), 'package.json'));
+    const filepath: string = join(path, '../../../flow-typed/core-components.js');
+    const { name: componentName } = await parsePackageJson(join(path, 'package.json'));
 
     let contents: string;
 
@@ -309,7 +307,7 @@ add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
     const proposedValue: string = 'dist/cjs/index.d.ts';
-    const filepath = join(getPath(), 'package.json');
+    const filepath = join(path, 'package.json');
     const json = await parsePackageJson(filepath);
 
     if (json.types) {

@@ -26,4 +26,4 @@ sink [path-to-package]
 
 ## Learning Typescript
 
-See [/docs/learning-typescript.md]
+See the [learning typescript notes](/docs/learning-typescript.md)

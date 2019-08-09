@@ -256,6 +256,36 @@ add({
 });
 
 add({
+  title: `Telling ${code('TypeScript')} to un-ignore this component`,
+  run: async () => {
+    const filepath: string = join(path, '../../../typings/atlaskit.d.ts');
+    const packageJson = await readFile(join(path, 'package.json'));
+    const contents = await readFile(filepath);
+
+    const { name: componentName } = await parseAsJson(packageJson);
+
+    const ignoreStatement = `declare module '${componentName}';`;
+
+    if (!contents.includes(ignoreStatement)) return;
+
+    const newFileContents = contents
+      .split('\n')
+      .filter(line => line !== ignoreStatement)
+      .join('\n');
+
+    try {
+      // Clear old file contents
+      await fs.truncate(filepath, 0);
+      await fs.appendFile(filepath, newFileContents, {
+        encoding: 'utf-8',
+      });
+    } catch (e) {
+      throw new Error(`Unable to ignore ${componentName} in ${filepath}`);
+    }
+  },
+});
+
+add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
     const proposedValue: string = 'dist/cjs/index.d.ts';

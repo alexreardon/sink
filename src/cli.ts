@@ -8,6 +8,14 @@ import commandExists from 'command-exists';
 import { spawn, exec } from 'child_process';
 import { join } from 'path';
 import semver from 'semver';
+import { appendFile, readFile, writeFile, parseAsJson } from './file-manager';
+
+type PackageJson = {
+  types?: string;
+  module?: string;
+  main?: string;
+  'atlaskit:src'?: string;
+};
 
 const getExec = promisify(exec);
 
@@ -20,11 +28,6 @@ const path: string = (() => {
   }
   return args[0].trim();
 })();
-
-type Package = {
-  name: string;
-  types: string;
-};
 
 type Section = {
   title: string;
@@ -39,26 +42,6 @@ function add(section: Section) {
 
 function code(value: string): string {
   return bold(cyan(value));
-}
-
-async function parsePackageJson(filePath: string): Promise<Package> {
-  let contents;
-
-  try {
-    contents = await fs.readFile(filePath, 'utf-8');
-  } catch (e) {
-    throw new Error('Unable to read package.json');
-  }
-
-  let json: Package;
-
-  try {
-    json = JSON.parse(contents);
-  } catch (e) {
-    throw new Error('Unable to parse package.json');
-  }
-
-  return json;
 }
 
 add({
@@ -215,27 +198,14 @@ add({
   title: `Adding ${code('index.ts')} to ${code('.npmignore')}`,
   run: async () => {
     const filepath: string = join(path, '.npmignore');
-
-    let contents: string;
-
-    try {
-      contents = await fs.readFile(filepath, 'utf-8');
-    } catch (e) {
-      throw new Error('Unable to find .npmignore');
-    }
+    const contents = await readFile(filepath);
 
     // Already have a index.ts in npmignore
     if (contents.includes('index.ts')) {
       return;
     }
 
-    try {
-      await fs.appendFile(filepath, '\n# Ignoring generated index.ts\nindex.ts', {
-        encoding: 'utf-8',
-      });
-    } catch (e) {
-      throw new Error('Unable to add index.ts to .npmignore');
-    }
+    return await appendFile(filepath, '\n# Ignoring generated index.ts\nindex.ts');
   },
 });
 
@@ -243,15 +213,10 @@ add({
   title: `Telling ${code('flow')} to ignore this component`,
   run: async () => {
     const filepath: string = join(path, '../../../flow-typed/core-components.js');
-    const { name: componentName } = await parsePackageJson(join(path, 'package.json'));
+    const packageJson = await readFile(join(path, 'package.json'));
+    const contents = await readFile(filepath);
 
-    let contents: string;
-
-    try {
-      contents = await fs.readFile(filepath, 'utf-8');
-    } catch (e) {
-      throw new Error(`Unable to find ${filepath}`);
-    }
+    const { name: componentName } = await parseAsJson(packageJson);
 
     const ignoreStatement = ` module '${componentName}' {\n  declare module.exports: any;\n}\n`;
 
@@ -281,7 +246,6 @@ add({
     try {
       // Clear old file contents
       await fs.truncate(filepath, 0);
-
       await fs.appendFile(filepath, newFileContents, {
         encoding: 'utf-8',
       });
@@ -291,18 +255,13 @@ add({
   },
 });
 
-// Keep the nice line breaks
-function stringify(object: Object) {
-  // hard coding 2 spaces as that is what is used in Atlaskit
-  return JSON.stringify(object, null, '  ');
-}
-
 add({
   title: `Adding ${code('types')} entry to ${code('package.json')}`,
   run: async () => {
     const proposedValue: string = 'dist/cjs/index.d.ts';
     const filepath = join(path, 'package.json');
-    const json = await parsePackageJson(filepath);
+    const contents = await readFile(filepath);
+    const json = await parseAsJson<PackageJson>(contents);
 
     if (json.types) {
       // all good
@@ -312,16 +271,30 @@ add({
       throw new Error(`Unexpected existing types entry in package.json: ${json.types}`);
     }
 
-    const updated: Package = {
+    const updated: PackageJson = {
       ...json,
       types: proposedValue,
     };
 
-    try {
-      await fs.writeFile(filepath, stringify(updated));
-    } catch (e) {
-      throw new Error('Unable to write to package.json');
-    }
+    return await writeFile(filepath, updated);
+  },
+});
+
+add({
+  title: `Adding required entry-points to ${code('package.json')}`,
+  run: async () => {
+    const filepath: string = join(path, 'package.json');
+    const contents = await readFile(filepath);
+    const json = await parseAsJson<PackageJson>(contents);
+
+    const updated: PackageJson = {
+      ...json,
+      module: 'dist/esm/index.js',
+      main: 'dist/esm/index.js',
+      'atlaskit:src': 'src/index.ts',
+    };
+
+    return await writeFile(filepath, updated);
   },
 });
 

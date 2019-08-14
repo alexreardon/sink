@@ -320,7 +320,7 @@ add({
     const updated: PackageJson = {
       ...json,
       module: 'dist/esm/index.js',
-      main: 'dist/esm/index.js',
+      main: 'dist/cjs/index.js',
       'atlaskit:src': 'src/index.ts',
     };
 

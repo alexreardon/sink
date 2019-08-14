@@ -90,7 +90,7 @@ add({
     // Do we satisfy a minimum version number?
     let output: string;
     const command: string = 'flowtees --version';
-    const minVersion: string = '^0.1.8';
+    const minVersion: string = '^0.1.9';
     const upgradeCommand: string = 'pip3 install flowtees --upgrade';
 
     try {

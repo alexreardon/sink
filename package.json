@@ -1,6 +1,6 @@
 {
   "name": "@alexreardon/sink",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A cli for bootstrapping a Atlaskit flow to ts conversion",
   "main": "dist/cli.js",
   "author": "Alex Reardon (alexreardon@gmail.com)",
